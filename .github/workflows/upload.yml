@@ -1,6 +1,9 @@
 name: Blob storage website CI
 
-on: [workflow_dispatch]
+on:
+  pull_request:
+    paths:
+      - 'public/**'
 
 jobs:
   build:
