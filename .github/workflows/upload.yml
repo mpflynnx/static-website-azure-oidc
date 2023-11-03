@@ -16,7 +16,11 @@ jobs:
       with:
         inlineScript: |
             az storage blob upload-batch --overwrite --account-name terraformaccount202310 --auth-mode key -d '$web' -s ./public/
-
+    - name: Purge CDN endpoint
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az afd endpoint purge --content-paths  "/*" --profile-name "MyFrontDoor" --endpoint-name "afd-742c2b4ffcf1d3a1" --resource-group "terraform-beginner-bootcamp-2023-azure"
   # Azure logout
     - name: logout
       run: |
