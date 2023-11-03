@@ -15,7 +15,7 @@ jobs:
       uses: azure/CLI@v1
       with:
         inlineScript: |
-            az storage blob upload-batch --account-name terraformaccount202310 --auth-mode key -d '$web' -s ./public/
+            az storage blob upload-batch --overwrite --account-name terraformaccount202310 --auth-mode key -d '$web' -s ./public/
 
   # Azure logout
     - name: logout
