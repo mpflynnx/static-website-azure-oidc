@@ -1,9 +1,15 @@
 name: Blob storage website CI
 
-on:
-  pull_request:
-    paths:
-      - 'public/**'
+on: [workflow_dispatch]
+
+
+env:
+  STORAGE_ACCOUNT_NAME: "terraformaccount202310"
+  SOURCE_PATH: "./public/"
+  CDN_PROFILE_NAME: "MyFrontDoor"
+  CDN_ENDPOINT: "afd-742c2b4ffcf1d3a1"
+  RESOURCE_GROUP: "terraform-beginner-bootcamp-2023-azure"
+
 
 jobs:
   build:
@@ -18,12 +24,12 @@ jobs:
       uses: azure/CLI@v1
       with:
         inlineScript: |
-            az storage blob upload-batch --overwrite --account-name terraformaccount202310 --auth-mode key -d '$web' -s ./public/
+            az storage blob upload-batch --overwrite --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --auth-mode key -d '$web' -s ${{ env.SOURCE_PATH }}
     - name: Purge CDN endpoint
       uses: azure/CLI@v1
       with:
         inlineScript: |
-          az afd endpoint purge --content-paths  "/*" --profile-name "MyFrontDoor" --endpoint-name "afd-742c2b4ffcf1d3a1" --resource-group "terraform-beginner-bootcamp-2023-azure"
+          az afd endpoint purge --content-paths  "/*" --profile-name ${{ env.CDN_PROFILE_NAME }} --endpoint-name ${{ env.CDN_ENDPOINT }} --resource-group ${{ env.RESOURCE_GROUP }}
   # Azure logout
     - name: logout
       run: |
