@@ -7,7 +7,7 @@ env:
   STORAGE_ACCOUNT_NAME: "terraformaccount202310"
   SOURCE_PATH: "./public/"
   CDN_PROFILE_NAME: "MyFrontDoor"
-  CDN_ENDPOINT: "afd-742c2b4ffcf1d3a1"
+  CDN_ENDPOINT: "afd-8321f85459a3065e"
   RESOURCE_GROUP: "terraform-beginner-bootcamp-2023-azure"
 
 
