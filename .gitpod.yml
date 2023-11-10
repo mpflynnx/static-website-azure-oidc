@@ -2,12 +2,12 @@ tasks:
   - name: gh-cli
     before: |
       cd $PROJECT_ROOT
-      source ./bin/install-gh-cli
+      source ./bin/install-gh-cli.sh
       gp sync-done gh-cli
   - name: azure-cli
     before: |
       cd $PROJECT_ROOT
-      gp sync-await gh-cli && source ./bin/install-azure-cli
+      gp sync-await gh-cli && source ./bin/install-azure-cli.sh
 vscode:
   extensions:
     - ms-vscode.azurecli
