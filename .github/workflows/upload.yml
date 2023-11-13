@@ -4,11 +4,11 @@ on: [workflow_dispatch]
 
 
 env:
-  STORAGE_ACCOUNT_NAME: "terraformaccount202310"
-  SOURCE_PATH: "./public/"
-  CDN_PROFILE_NAME: "MyFrontDoor"
-  CDN_ENDPOINT: "afd-8321f85459a3065e"
-  RESOURCE_GROUP: "terraform-beginner-bootcamp-2023-azure"
+  source-path: "./public/"
+  storage-account-name: ${{ secrets.STORAGE_ACCOUNT_NAME }}
+  cdn-profile-name: ${{ secrets.CDN_PROFILE_NAME }}
+  cdn-endpoint: ${{ secrets.CDN_ENDPOINT }}
+  resource-group: ${{ secrets.RESOURCE_GROUP }}
 
 permissions:
       id-token: write
@@ -29,12 +29,12 @@ jobs:
       uses: azure/CLI@v1
       with:
         inlineScript: |
-            az storage blob upload-batch --overwrite --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --auth-mode key -d '$web' -s ${{ env.SOURCE_PATH }}
+            az storage blob upload-batch --overwrite --account-name ${{ env.storage-account-name }} --auth-mode key -d '$web' -s ${{ env.source-path }}
     - name: Purge CDN endpoint
       uses: azure/CLI@v1
       with:
         inlineScript: |
-          az afd endpoint purge --content-paths  "/*" --profile-name ${{ env.CDN_PROFILE_NAME }} --endpoint-name ${{ env.CDN_ENDPOINT }} --resource-group ${{ env.RESOURCE_GROUP }}
+          az afd endpoint purge --content-paths  "/*" --profile-name ${{ env.cdn-profile-name }} --endpoint-name ${{ env.cdn-endpoint }} --resource-group ${{ env.resource-group }}
   # Azure logout
     - name: logout
       run: |
