@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
 # Text formatting
-declare red=`tput setaf 1`
-declare bold=`tput bold`
+declare red=$(tput setaf 1)
+declare bold=$(tput bold)
+declare plain=$(tput sgr0)
+declare white=$(tput setaf 7)
 declare newline=$'\n'
 
 # Element styling
 declare errorStyle="${red}${bold}"
+declare defaultTextStyle="${plain}${white}"
 
 if [ -z "$1" ]; then
-  echo "${newline}${errorStyle}ERROR, please define a display name.${defaultTextStyle}${newline}"
-  echo "i.e $ "$0" displayName${newline}"
+  echo "${newline}${errorStyle}ERROR, please define a username (mix lowercase letters or numbers, no spaces).${defaultTextStyle}${newline}"
+  echo "Usage example: $ $0 developer01${newline}"
   exit 1
 fi
 
@@ -30,20 +33,21 @@ echo "Using the following Azure subscription. If this isn't correct, press Ctrl+
 echo "${newline}"
 az account show -o table
 echo "${newline}"
+sleep 4
 
 echo "${newline}Getting credentials from signed in user...${newline}"
 azureSubscriptionId=$(az account show --query "id" --output tsv)
 
-az account set -s $azureSubscriptionId
+az account set -s "$azureSubscriptionId"
 
 # Create an Microsoft Entra ID User
 
 # check for existing user first
-userObjectId=$(az ad user list --display-name ${displayName} --query "[].id" --output tsv)
+userObjectId=$(az ad user list --display-name "${displayName}" --query "[].id" --output tsv)
 
-if [ ! -z "$userObjectId" ]
+if [ -n "${userObjectId}" ]
 then
-  echo "${newline}${errorStyle}User '${displayName}' already exists, exiting.${newline}${errorStyle}"
+  echo "${newline}${errorStyle}User '${displayName}' already exists, exiting.${newline}${defaultTextStyle}"
   exit 1
 fi
 
@@ -51,57 +55,57 @@ primaryDomain=$(az rest --method get --url 'https://graph.microsoft.com/v1.0/dom
 # primaryDomain="mpflynnx01outlook.onmicrosoft.com"
 
 # build user-principal-name
-userPrincipalName="$displayName@$primaryDomain"
+userPrincipalName="${displayName}@${primaryDomain}"
 
 # generate an initial password, user will be forced to change this
-initialPasswd=$(</dev/urandom tr -dc '12345!@#$%qwertQWERTasdfgASDFGzxcvbZXCVB' | head -c8; echo "")
-# initialPasswd="passWorD1!"
+PasswdFront=$(</dev/urandom tr -dc 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head -c4; echo "")
+PasswdRear=$(</dev/urandom tr -dc '1234567890' | head -c6; echo "")
+initialPasswd="$PasswdFront$PasswdRear"
 
 echo "${newline}Creating new Microsoft Entra ID User..."
-if [ -z "$userObjectId" ]
+if [ -z "${userObjectId}" ]
 then
   az ad user create \
-    --display-name $displayName \
-    --password $initialPasswd \
-    --user-principal-name $userPrincipalName \
+    --display-name "${displayName}" \
+    --password "${initialPasswd}" \
+    --user-principal-name "${userPrincipalName}" \
     --force-change-password-next-sign-in \
     --output none
 
   if [ ! $? -eq 0 ]
   then
     echo "${newline}${errorStyle}ERROR creating new user, exiting.${defaultTextStyle}${newline}"
-    exit1
+    exit 1
   fi
 
 # Get ObjectId of the User
-echo "${newline}User created."
-
-  
+echo "${newline}User created.${newline}"
+ 
 fi
 
 # Get ObjectId of the User
-userObjectId=$(az ad user list --display-name ${displayName} --query "[].id" --output tsv)
+userObjectId=$(az ad user list --display-name "${displayName}" --query "[].id" --output tsv)
 
-echo "${newline}Object ID: ${userObjectId}${newline}"
+userScope="/subscriptions/$azureSubscriptionId"
 
 # Add role to new user
 echo "${newline}Adding new role assignment..."
 roleName="Contributor"
-if [ ! -z "userObjectId" ]
+if [ -n "${userObjectId}" ]
 then
   az role assignment create \
-    --assignee-object-id ${userObjectId} \
+    --assignee-object-id "${userObjectId}" \
     --assignee-principal-type User \
-    --role ${roleName} \
-    --scope /subscriptions/${azureSubscriptionId} \
+    --role "${roleName}" \
+    --scope "${userScope}" \
     --output none
 
   if [ ! $? -eq 0 ]
   then
     echo "${newline}${errorStyle}ERROR adding role to User, exiting.${defaultTextStyle}${newline}"
     # delete User
-    az ad user delete --id ${userObjectId}
-    exit1
+    az ad user delete --id "${userObjectId}"
+    exit 1
   fi
 
   echo "${newline}Role '$roleName' added successfully.${newline}"
@@ -111,21 +115,21 @@ fi
 # Add role to new user
 echo "${newline}Adding new role assignment..."
 roleName="Role Based Access Control Administrator"
-if [ ! -z "userObjectId" ]
+if [ -n "${userObjectId}" ]
 then
   az role assignment create \
-    --assignee-object-id ${userObjectId} \
+    --assignee-object-id "${userObjectId}" \
     --assignee-principal-type User \
     --role "${roleName}" \
-    --scope /subscriptions/${azureSubscriptionId} \
+    --scope "${userScope}" \
     --output none
 
   if [ ! $? -eq 0 ]
   then
     echo "${newline}${errorStyle}ERROR adding role to User, exiting.${defaultTextStyle}${newline}"
     # delete User
-    az ad user delete --id ${userObjectId}
-    exit1
+    az ad user delete --id "${userObjectId}"
+    exit 1
   fi
 
   echo "${newline}Role '$roleName' added successfully.${newline}"
@@ -134,5 +138,8 @@ fi
 
 # list roles
 echo "${newline}User role assignments:-"
-az role assignment list --assignee ${userObjectId} --query "[].roleDefinitionName" --output tsv
+az role assignment list --assignee "${userObjectId}" --query "[].roleDefinitionName" --output tsv
 echo "${newline}"
+
+echo "User login: $userPrincipalName"
+echo "Password: $initialPasswd${newline}"
