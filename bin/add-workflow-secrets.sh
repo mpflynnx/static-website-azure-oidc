@@ -55,6 +55,13 @@ echo
 echo "Getting resource names from Azure resource group...."
 echo
 
+# check resource group exists first
+if [! az group exists --name "${resourceGroup}" &> /dev/null]
+then
+  echo "${newline}${errorStyle}ERROR: Resource group '${resourceGroup}' does not exist!${defaultTextStyle}${newline}"
+  exit 1
+fi
+
 storageAccountName=$(az storage account list --resource-group "${resourceGroup}" --query "[].name" --output tsv)
 
 if [ -z "${storageAccountName}" ]
