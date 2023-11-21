@@ -1,21 +1,37 @@
 
 ## Azure OIDC setup
 
+When an Azure account is created we have a subscription. We also have something called a [Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/fundamentals/whatis) Default Directory (Tenant). As the first user you are assigned the Global Administrator role. As the name suggests, this user has access to everything and can do everything. (refer to creating a restricted user).
+
+Within the Default Directory, we can [register applications](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#application-registration) like Azure CLI and Terraform to create/modify Azure resources. We have a choice, create a new user, which requires interactions on their part, such as signing in with a password and 2FA. Or something called a service principal which can automatically sign in with no interactions. 
+
+Depending on the level of access needed, sometimes a logged in user will be required. If a service principal can be used then this is the preferred option.
+
+There are three types of service principal: Application, Managed identity and legacy.
+
+A service principal must belong to a registered application.
+When registering/creating an application using the Azure CLI which uses Microsoft Graph APIs, creating the service principal object is a separate step.
+
+We need to give access to the GitHub Action workflow to modify our existing Azure resources. We do this by:
+
+1. Registering/creating an [Application](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#application-object)
+1. Creating a [service principal](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#service-principal-object) for the Application
+1. Assigning a role to the service principal
+1. Add a [federated credential](https://learn.microsoft.com/en-gb/entra/identity-platform/quickstart-register-app#add-a-federated-credential)
+
 ### Why use OpenId Connect (OIDC)
 
-I have chosen to use OIDC, over the use a Service principal along with a repository secret to reduce creating credentials in Azure then duplicating them in GitHub as a long-lived secret.
+I have chosen to use OIDC, over the alternative which is to use a service principal along with a repository secret, to reduce creating credentials in Azure then duplicating them in GitHub as a long-lived secret.
 
 OpenID Connect means the GitHub Action workflow can request a short-lived access token directly from Azure. The Token is only valid for a single job then expires automatically.
 
-In Azure, we create an OIDC trust between a Microsoft Entra applications service principal and the GitHub workflow.
-
 ### Bash script
 
-I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) to automate the many steps needed in setting up OIDC. The script dynamically builds local variables and retrieves values for these from the Azure signed in users subscription and the GitHub repository. Therefore the script depends on Azure CLI and GitHub CLI being installed and ready for use. I recommend using Gitpod along with this repository. I have created a '.gitpod.yml' file  in this repository that will install both Azure CLI and GitHUb CLI in the Gitpod cloud development environment. For instructions on how to use Gitpod refer to document [Gitpod Development Environment](gitpod-development-environment.md). 
+I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) to automate the many steps needed in setting up OIDC. The script dynamically builds local variables and retrieves values for these from the Azure signed in users subscription and the GitHub repository. Therefore the script depends on Azure CLI and GitHub CLI being installed and ready for use. I recommend using Gitpod along with this repository. I have created a '.gitpod.yml' file  and bash scripts in this repository that will install the latest versions of both Azure CLI and GitHUb CLI in the Gitpod cloud development environment. For instructions on how to use Gitpod refer to document [Gitpod Development Environment](gitpod-development-environment.md). 
 
 ### Review of the azure-oidc-setup.sh bash script
 
-Firstly I need to check that one of the scripts dependencies, Azure CLI is available. 
+Firstly I need to check that one of the scripts dependencies, [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/what-is-azure-cli) is available. 
 
 I use the [az account show](https://learn.microsoft.com/en-us/cli/azure/account?view=azure-cli-latest#az-account-show) command with an output parameter set to none. If this command returns an error it means that Azure CLI is not available and the script will exit.
 
@@ -32,7 +48,6 @@ then
 fi
 
 ## ...
-
 ```
 
 Then, I get the default subscription of the signed in user by using the [az account show](https://learn.microsoft.com/en-us/cli/azure/account?view=azure-cli-latest#az-account-show) command with an output parameter set to table. 
@@ -43,10 +58,9 @@ Then, I get the default subscription of the signed in user by using the [az acco
 az account show -o table
 
 ## ...
-
 ```
 
-Then, I check that another of the scripts dependencies, GitHub CLI is available.
+Then, I check that another of the scripts dependencies, [GitHub CLI](https://cli.github.com/manual/) is available.
 
 I use the [gh auth status](https://cli.github.com/manual/gh_auth_status). If this command returns an error it means that GitHub CLI is not available and the script will exit.
 
@@ -66,7 +80,7 @@ fi
 
 ```
 
-I then use the [gh repo show](https://cli.github.com/manual/gh_repo_view) GitHub CLI command to assign a value to local variables 'owner' and 'appName'. These variables will be used to create the trust link with GitHub repository later.
+I then use the [gh repo view](https://cli.github.com/manual/gh_repo_view) GitHub CLI command to assign a value to local variables 'owner' and 'appName'. These variables will be used to create the trust link with GitHub repository later.
 
 appName will also be used as the name of the Microsoft Entra application.
 

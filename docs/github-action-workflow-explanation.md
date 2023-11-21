@@ -1,4 +1,13 @@
-## Review GitHub Action workflow
+## GitHub Action workflow file explanation
+
+By using this workflow to deploy a static site to an Azure storage account. I will be able to automatically deploy the site to Azure from GitHub when changes are pushed to the repositories main branch.
+
+The [workflow](../.github/workflows/upload.yml) will:
+
+- Upload the content of the repositories [public](./public/) folder to the Azure storage blob.
+- Purge the Front Door CDN, so that the old content is removed from the edge locations.
+
+### Review GitHub Action workflow file
 
 The first line defines the name of the Actions workflow.
 
@@ -7,7 +16,7 @@ The first line defines the name of the Actions workflow.
 name: Blob storage website CI
 ## ...
 ```
-Next, the configuration states that this workflow should only run when a push event occurs to the main branch and the changes include files in the public folder or subfolders. It also defines environment variables used by the workflow.
+Next, the configuration states that this workflow should only run when a push event occurs to the main branch and the changes include files in the public folder or subfolders. It also defines environment variables used by the workflow. The values are retrieved from the repositories secrets. Refer to document: [Adding secrets to repository](/docs/adding-secrets-to-repository.md) for a more detailed explanation of how I do this.
 
 ```yml
 ## ...
@@ -29,7 +38,7 @@ env:
 ## ...
 ```
 
-Then, we specify the permissions required to run the workflow step named Login using OIDC.
+Then, we specify the permissions required to run the workflow step named 'Login' using OIDC.
 
 ```yml
 ## ...
@@ -41,7 +50,7 @@ permissions:
 ## ..
 ```
 
-Then, the configuration defines a build job, that runs on the Ubuntu latest image.
+Then, the configuration defines a build job, that runs on the Ubuntu latest GitHub-hosted runner. Each [GitHub-hosted runner](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#overview-of-github-hosted-runners) is a new virtual machine (VM) hosted by GitHub with the runner application and other tools preinstalled.
 
 ```yml
 ## ...
