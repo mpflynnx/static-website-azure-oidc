@@ -5,7 +5,7 @@ When an Azure account is created we have a subscription. We also have something 
 
 Within the Default Directory, we can [register applications](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#application-registration) like Azure CLI and Terraform to create/modify Azure resources. We have a choice, create a new user, which requires interactions on their part, such as signing in with a password and 2FA. Or something called a service principal which can automatically sign in with no interactions. 
 
-Depending on the level of access needed, sometimes a logged in user will be required. If a service principal can be used then this is the preferred option.
+Depending on the level of access needed, sometimes a logged in user will be required. If a service principal can be used then this is the preferred option. 
 
 There are three types of service principal: Application, Managed identity and legacy.
 
@@ -27,9 +27,30 @@ OpenID Connect means the GitHub Action workflow can request a short-lived access
 
 ### Bash script
 
-I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) to automate the many steps needed in setting up OIDC. The script dynamically builds local variables and retrieves values for these from the Azure signed in users subscription and the GitHub repository. Therefore the script depends on Azure CLI and GitHub CLI being installed and ready for use. I recommend using Gitpod along with this repository. I have created a '.gitpod.yml' file  and bash scripts in this repository that will install the latest versions of both Azure CLI and GitHUb CLI in the Gitpod cloud development environment. For instructions on how to use Gitpod refer to document [Gitpod Development Environment](gitpod-development-environment.md). 
+I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) to automate the many steps needed in setting up OIDC. The script dynamically builds local variables and retrieves values for these from the Azure signed in users subscription and the GitHub repository. Therefore the script depends on Azure CLI and GitHub CLI being installed and ready for use. I recommend using Gitpod along with this repository. I have created a '.gitpod.yml' file  and bash scripts in this repository that will install the latest versions of both Azure CLI and GitHUb CLI in the Gitpod cloud development environment. For instructions on how to use Gitpod refer to document [Gitpod Development Environment](gitpod-development-environment.md).
+
+To run this script successfully, it is recommended to sign in to Azure Cli with a user login. The user must have been assigned two roles, 'Contributor' and 'Role Based Access Control Administrator' as a minimum. I have created a bash script [new-azure-user.sh](../bin/new-azure-user.sh) to aid in the creation of a new user in Azure with the roles needed.
 
 ### Review of the azure-oidc-setup.sh bash script
+
+The first lines of the script are for formatting the error messages.
+
+```bash
+## ...
+
+# Text formatting
+declare red=$(tput setaf 1)
+declare bold=$(tput bold)
+declare plain=$(tput sgr0)
+declare white=$(tput setaf 7)
+declare newline=$'\n'
+
+# Element styling
+declare errorStyle="${red}${bold}"
+declare defaultTextStyle="${plain}${white}"
+
+## ...
+```
 
 Firstly I need to check that one of the scripts dependencies, [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/what-is-azure-cli) is available. 
 
@@ -95,7 +116,7 @@ appName=$(gh repo view --json name -q ".name")
 
 ```
 
-Then, I need to check that the Microsoft Entra application doesn't already exist in Azure, by using the Azure CLI command [az ad app list](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-list).
+Then, I need to check that the Microsoft Entra ID application doesn't already exist in Azure, by using the Azure CLI command [az ad app list](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-list).
 
 I assign the output of the command to a local variable 'clientId'.
 
@@ -107,9 +128,9 @@ If the 'clientId' variable has a value that means the application exists, and th
 # check for existing app first
 clientId=$(az ad app list --display-name ${appName} --query "[].appId" --output tsv)
 
-if [ ! -z "$clientId" ]
+if [ -n "${clientId}" ]
 then
-  echo "Application ${appName} already exists, exiting."
+  echo "${newline}${errorStyle}Application ${appName} already exists, exiting.${defaultTextStyle}${newline}"
   exit 1
 fi
 
@@ -117,13 +138,18 @@ fi
 
 ```
 
-Continuing on. The application doesn't exist, so I create a new application using the [az ad app create](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create) command and pass in the local variable 'appName' as the display name.
+Continuing on. The application doesn't exist, so I create a new application using the [az ad app create](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create) command and pass in the local variable 'appName' as the display name. If this command returns an error the script will exit.
 
 
 ```bash
 ## ...
 
-az ad app create --display-name ${appName}
+az ad app create --display-name "${appName}" --output none
+if [ ! $? -eq 0 ]
+then
+  echo "${newline}${errorStyle}ERROR creating application, exiting.${defaultTextStyle}${newline}"
+  exit 1
+fi
 
 ## ...
 ```
@@ -133,7 +159,7 @@ I now need to retrieve the Application (client) ID of the new application. I wil
 ```bash
 ## ...
 
-clientId=$(az ad app list --display-name ${appName} --query "[].appId" --output tsv)
+clientId=$(az ad app list --display-name "${appName}" --query "[].appId" --output tsv)
 
 ## ...
 ```
@@ -143,18 +169,20 @@ Then, I check that the variable 'clientId' has a value. That means the applicati
 ```bash
 ## ...
 
-echo "Creating new Service principal ...."
-if [ ! -z "$clientId" ]
+echo "${newline}Creating new Service principal..."
+if [ -n "${clientId}" ]
 then
-  az ad sp create --id ${clientId}
+  az ad sp create --id "${clientId}" --output none
 
   if [ ! $? -eq 0 ]
   then
-    echo "${newline}${errorStyle}ERROR creating Service principal!${defaultTextStyle}${newline}"
+    echo "${newline}${errorStyle}ERROR creating Service principal, exiting.${defaultTextStyle}${newline}"
+    # delete app
+    az ad app delete --id "${clientId}"
     exit 1
   fi
 
-  echo "Service principal Created."
+    echo "${newline}Service principal created.${newline}"
 
 fi
 
@@ -168,24 +196,36 @@ To assign a role, I need to provide the Object ID of the Service principal. I us
 ```bash
 ## ...
 
-spObjectId=$(az ad sp list --display-name ${appName} --query "[].id" --output tsv)
+spObjectId=$(az ad sp list --display-name "${appName}" --query "[].id" --output tsv)
 
 ## ...
 ```
 
-I can then assign the role using command [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create).
+I can then assign the role using command [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create). If the command returns an error the application is deleted and the script exits. An error here may indicate than the user runing the script does not have the 'Role Based Access Control Administrator' role assigned.
 
 ```bash
 ## ...
 
-if [ ! -z "spObjectId" ]
+echo "${newline}Adding new role assignment..."
+if [ -n "${spObjectId}" ]
 then
   az role assignment create \
     --role "Contributor" \
-    --subscription ${azureSubscriptionId} \
-    --assignee-object-id ${spObjectId} \
+    --assignee-object-id "${spObjectId}" \
     --assignee-principal-type ServicePrincipal \
+    --scope /subscriptions/"${azureSubscriptionId}" \
     --output none
+
+  if [ ! $? -eq 0 ]
+  then
+    echo "${newline}${errorStyle}ERROR adding role to service principal, exiting.${defaultTextStyle}${newline}"
+    # delete app
+    az ad app delete --id "${clientId}"
+    exit 1
+  fi
+
+  echo "${newline}Role added successfully.${newline}"
+  
 fi
 
 ## ...
@@ -199,7 +239,7 @@ I use command [az ad app list](https://learn.microsoft.com/en-us/cli/azure/ad/ap
 ```bash
 ## ...
 
-appObjectId=$(az ad app list --display-name ${appName} --query "[].id" --output tsv)
+appObjectId=$(az ad app list --display-name "${appName}" --query "[].id" --output tsv)
 
 ## ...
 ```
@@ -224,6 +264,7 @@ I then need to add the ref path for branch/tag based on the ref path used for tr
 
 ```bash
 ## ...
+
 cat > "credential.json" << EOF
 {
     "name": "${appName}",
@@ -235,17 +276,31 @@ cat > "credential.json" << EOF
     ]
 }
 EOF
+
 ## ...
 ```
 
-I check that the variable 'appObjectId' is not empty. Then I use the command [az ad app federated-credential create](https://learn.microsoft.com/en-us/cli/azure/ad/app/federated-credential?view=azure-cli-latest#az-ad-app-federated-credential-create). The id parameter specifies the object ID of the application, not to be confused with the Application (client) ID or the Service principal Object ID. I pass the credential.json file path as the value of the parameters.
+I check that the variable 'appObjectId' is not empty. Then I use the command [az ad app federated-credential create](https://learn.microsoft.com/en-us/cli/azure/ad/app/federated-credential?view=azure-cli-latest#az-ad-app-federated-credential-create). The id parameter specifies the object ID of the application, not to be confused with the Application (client) ID or the Service principal Object ID. I pass the credential.json file path as the value of the parameters. 
+
+If the command returns an error the application is deleted and the script exits.
 
 ```bash
 ## ...
 
-if [ ! -z "appObjectId" ]
+echo "${newline}Adding federated credentials..."
+if [ -n "${appObjectId}" ]
 then
-  az ad app federated-credential create --id ${appObjectId} --parameters credential.json
+  az ad app federated-credential create --id "${appObjectId}" --parameters credential.json --output none
+  if [ ! $? -eq 0 ]
+  then
+    echo "${newline}${errorStyle}ERROR adding federated credentials, exiting.${defaultTextStyle}${newline}"
+    # delete app
+    az ad app delete --id "${clientId}"
+    exit 1
+  fi
+
+  echo "${newline}Federated credentials added successfully.${newline}"
+  
 fi
 
 ## ...

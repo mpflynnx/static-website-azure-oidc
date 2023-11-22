@@ -44,12 +44,12 @@ run when the workspace is restarted. Gitpod executes the before and command task
 
 ## Azure CLI
 
-The Azure Command-Line Interface (CLI) is a cross-platform command-line tool to connect to Azure and execute administrative commands on Azure resources. It allows the execution of commands through a terminal using interactive command-line prompts or a script.[<sup>[5]</sup>](#external-references)
+The Azure Command-Line Interface (CLI) is a cross-platform command-line tool to connect to Azure and execute administrative commands on Azure resources. It allows the execution of commands through a terminal using interactive command-line prompts or a script.
 
 ### Azure users
 Upon sign up completion of a new Azure account, you have the "Owner" and "User Access Administrator" roles for the subscription. For development, is it best practice to create a new user and assign less privileged roles. 
 
-I have created a [bash script]() which will create a new user with the "Contributor" and "Role Based Access Control Administrator" roles to the subscription. Which for this and most projects should be sufficient.
+I have created a bash script [new-azure-user.sh](../bin/new-azure-user.sh) to aid in the creation of a new user in Azure with the roles "Contributor" and "Role Based Access Control Administrator" roles. Which for this and most projects should be sufficient.
 
 To execute the script you must be logged in to the Azure CLI terminal using the first user account.
 
@@ -60,7 +60,40 @@ Login using the [az login](https://learn.microsoft.com/en-us/cli/azure/authentic
 ```bash
 az login --use-device-code 
 ```
+
+### Expected output
+
+```bash
+To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code DUGLPJF6K to authenticate.
+```
+
 You will need to copy the code given into the newly opened browser tab. Then sign in with your username and password.
+
+### Expected output
+
+```bash
+[
+  {
+    "cloudName": "AzureCloud",
+    "homeTenantId": "EXAMPLE4-b347-40ac-b72c-bddf80db0bc3",
+    "id": "EXAMPLE7-ac68-4fc9-a041-d53a62c8d14e",
+    "isDefault": true,
+    "managedByTenants": [],
+    "name": "Azure subscription 1",
+    "state": "Enabled",
+    "tenantId": "EXAMPLE4-b347-40ac-b72c-bddf80db0bc3",
+    "user": {
+      "name": "fakeuser01@domainname.com",
+      "type": "user"
+    }
+  }
+]
+```
+
+Make the script executable
+```
+chmod u+x ./bin/new-azure-user.sh
+```
 
 At the terminal prompt enter the path to the script followed by a name for the user. In the below example the name give is "developer1".
 
@@ -68,7 +101,15 @@ At the terminal prompt enter the path to the script followed by a name for the u
 ./bin/new-azure-user.sh developer1
 ```
 
-Upon the scripts completion a new user "developer1" will be created. Make a note of the login and the password.
+Upon the scripts completion a new user "developer1" will be created. Make a note of the User login and the password.
+
+
+### Expected output
+
+```bash
+User login: developer1@fakedomainname.onmicrosoft.com
+Password: OZcG495361
+```
 
 Logout of the first Azure account.
 
@@ -81,8 +122,38 @@ Login as the new user.
 ```bash
 az login --use-device-code 
 ```
+
+### Expected output
+
+```bash
+To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code DQEQXKNRF to authenticate.
+```
+
 You will need to copy the code given into the newly opened browser tab. Then sign in with the login details of user "developer1".
 
-If it is the first time you have logged in, you will be prompted to change the password and setup two factor authentication.
+The first time you logged in, you will be prompted to change the password and setup two factor authentication.
+
+### Expected output
+
+```bash
+[
+  {
+    "cloudName": "AzureCloud",
+    "homeTenantId": "EXAMPLE4-b347-40ac-b72c-bddf80db0bc3",
+    "id": "EXAMPLE7-ac68-4fc9-a041-d53a62c8d14e",
+    "isDefault": true,
+    "managedByTenants": [],
+    "name": "Azure subscription 1",
+    "state": "Enabled",
+    "tenantId": "EXAMPLE4-b347-40ac-b72c-bddf80db0bc3",
+    "user": {
+      "name": "developer1@fakedomainname.onmicrosoft.com",
+      "type": "user"
+    }
+  }
+]
+```
 
 You are now signed in as the user "developer1".
+
+If you start a new Gitpod workspace or stop and restart an existing workspace, you will need to sign in again to Azure Cli.
