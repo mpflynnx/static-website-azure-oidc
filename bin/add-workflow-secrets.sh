@@ -24,7 +24,7 @@ fi
 appName=$(gh repo view --json name -q ".name")
 clientId=$(az ad app list --display-name "${appName}" --query "[].appId" --output tsv)
 
-# Microsoft Entra application check
+# Microsoft Entra ID application check
 if [ -z "${clientId}" ]
 then
   echo "${newline}${errorStyle}ERROR: Client Id not defined, have you run script 'azure-oidc-setup.sh'?${defaultTextStyle}${newline}"
@@ -51,12 +51,19 @@ then
   exit 1
 fi
 
-echo
 echo "Getting resource names from Azure resource group...."
-echo
 
-# check resource group exists first
-if [! az group exists --name "${resourceGroup}" &> /dev/null]
+# Check resource group exists first
+# Swallow STDERR so we don't get red text here from expected error if the RG doesn't exist
+exec 3>&2
+exec 2> /dev/null
+
+rg=$(az group show -g "${resourceGroup}" -o json)
+
+# Reset STDERR
+exec 2>&3
+
+if [ -z "$rg" ]
 then
   echo "${newline}${errorStyle}ERROR: Resource group '${resourceGroup}' does not exist!${defaultTextStyle}${newline}"
   exit 1
@@ -100,7 +107,7 @@ EOF
 # Set multiple secrets imported from the ".env" file must make sure
 # .env is not part of VCS i.e .gitignore
 echo
-echo "Adding repository GitHub secrets to be referenced in your workflow...."
+echo "Adding GitHub repository secrets to be referenced in your workflow...."
 echo
 gh secret set -f .env
 echo

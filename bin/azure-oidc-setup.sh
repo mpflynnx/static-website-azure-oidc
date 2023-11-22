@@ -47,7 +47,7 @@ clientId=$(az ad app list --display-name "${appName}" --query "[].appId" --outpu
 
 if [ -n "${clientId}" ]
 then
-  echo "${newline}${errorStyle}Application ${appName} already exists, exiting.${defaultTextStyle}${newline}"
+  echo "${newline}${errorStyle}Application '${appName}' already exists, exiting.${defaultTextStyle}${newline}"
   exit 1
 fi
 
@@ -142,6 +142,9 @@ then
   
 fi
 
-echo "${newline}"
 # Cleaning up
 rm credential.json 2>/dev/null
+
+echo "${newline}Application created!"
+echo "${newline}Application name: ${appName}"
+echo "Application ID: ${clientId}${newline}"
