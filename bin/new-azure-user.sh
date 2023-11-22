@@ -52,7 +52,6 @@ then
 fi
 
 primaryDomain=$(az rest --method get --url 'https://graph.microsoft.com/v1.0/domains?$select=id' | jq -r '.value[0].id')
-# primaryDomain="mpflynnx01outlook.onmicrosoft.com"
 
 # build user-principal-name
 userPrincipalName="${displayName}@${primaryDomain}"
