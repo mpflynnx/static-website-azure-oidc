@@ -59,7 +59,7 @@ userPrincipalName="${displayName}@${primaryDomain}"
 # generate an initial password, user will be forced to change this
 PasswdFront=$(</dev/urandom tr -dc 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head -c4; echo "")
 PasswdRear=$(</dev/urandom tr -dc '1234567890' | head -c6; echo "")
-initialPasswd="${PasswdFront}${PasswdRear}"
+initialPasswd="${PasswdFront}a!B${PasswdRear}"
 
 echo "${newline}Creating new Microsoft Entra ID User..."
 if [ -z "${userObjectId}" ]
