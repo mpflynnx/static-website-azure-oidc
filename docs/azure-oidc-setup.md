@@ -3,7 +3,7 @@
 
 When an Azure account is created we have a subscription. We also have something called a [Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/fundamentals/whatis) Default Directory (Tenant). As the first user you are assigned the Global Administrator role. As the name suggests, this user has access to everything and can do everything. (refer to creating a restricted user).
 
-Within the Default Directory, we can [register applications](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#application-registration) like Azure CLI and Terraform to create/modify Azure resources. We have a choice, create a new user, which requires interactions on their part, such as signing in with a password and 2FA. Or something called a service principal which can automatically sign in with no interactions. 
+Within the Default Directory, we can [register applications](https://learn.microsoft.com/en-gb/entra/identity-platform/app-objects-and-service-principals?tabs=browser#application-registration) like Terraform to create/modify Azure resources. We have a choice, create a new user, which requires interactions on their part, such as signing in with a password and 2FA. Or something called a service principal which can automatically sign in with no interactions. 
 
 Depending on the level of access needed, sometimes a logged in user will be required. If a service principal can be used then this is the preferred option. 
 
@@ -29,7 +29,7 @@ OpenID Connect means the GitHub Action workflow can request a short-lived access
 
 I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) to automate the many steps needed in setting up OIDC. The script dynamically builds local variables and retrieves values for these from the Azure signed in users subscription and the GitHub repository. Therefore the script depends on Azure CLI and GitHub CLI being installed and ready for use. I recommend using Gitpod along with this repository. I have created a '.gitpod.yml' file  and bash scripts in this repository that will install the latest versions of both Azure CLI and GitHUb CLI in the Gitpod cloud development environment. For instructions on how to use Gitpod refer to document [Gitpod Development Environment](gitpod-development-environment.md).
 
-To run this script successfully, it is recommended to sign in to Azure Cli with a user login. The user must have been assigned two roles, 'Contributor' and 'Role Based Access Control Administrator' as a minimum. I have created a bash script [new-azure-user.sh](../bin/new-azure-user.sh) to aid in the creation of a new user in Azure with the roles needed.
+To run this script successfully, it is recommended to sign in to Azure Cli with a user login. The user must have been assigned two roles, 'Contributor' and 'Role Based Access Control Administrator' as a minimum. I have created a bash script [new-azure-user.sh](../bin/new-azure-user.sh) to aid in the creation of a new user in Azure with the roles needed. Refer to document: [new azure user script explanation](new-azure-user-script-explanation.md) for a more detailed explanation.
 
 ### Review of the azure-oidc-setup.sh bash script
 
