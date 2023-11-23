@@ -40,7 +40,7 @@ appName=$(gh repo view --json name -q ".name")
 echo "${newline}Getting credentials from signed in user...${newline}"
 azureSubscriptionId=$(az account show --query "id" --output tsv)
 
-az account set -s "$azureSubscriptionId"
+az account set -s "${azureSubscriptionId}"
 
 # check for existing app first
 clientId=$(az ad app list --display-name "${appName}" --query "[].appId" --output tsv)
@@ -51,7 +51,7 @@ then
   exit 1
 fi
 
-# Create a Microsoft Entra application.
+# Create a Microsoft Entra ID application.
 echo "${newline}Creating new Microsoft Entra application..."
 az ad app create --display-name "${appName}" --output none
 if [ ! $? -eq 0 ]
