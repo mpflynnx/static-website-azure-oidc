@@ -38,7 +38,7 @@ sleep 4
 echo "${newline}Getting credentials from signed in user...${newline}"
 azureSubscriptionId=$(az account show --query "id" --output tsv)
 
-az account set -s "$azureSubscriptionId"
+az account set -s "${azureSubscriptionId}"
 
 # Create an Microsoft Entra ID User
 
@@ -59,7 +59,7 @@ userPrincipalName="${displayName}@${primaryDomain}"
 # generate an initial password, user will be forced to change this
 PasswdFront=$(</dev/urandom tr -dc 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head -c4; echo "")
 PasswdRear=$(</dev/urandom tr -dc '1234567890' | head -c6; echo "")
-initialPasswd="$PasswdFront$PasswdRear"
+initialPasswd="${PasswdFront}${PasswdRear}"
 
 echo "${newline}Creating new Microsoft Entra ID User..."
 if [ -z "${userObjectId}" ]
@@ -77,7 +77,6 @@ then
     exit 1
   fi
 
-# Get ObjectId of the User
 echo "${newline}User created.${newline}"
  
 fi
@@ -85,60 +84,40 @@ fi
 # Get ObjectId of the User
 userObjectId=$(az ad user list --display-name "${displayName}" --query "[].id" --output tsv)
 
-userScope="/subscriptions/$azureSubscriptionId"
+userScope="/subscriptions/${azureSubscriptionId}"
 
 # Add role to new user
-echo "${newline}Adding new role assignment..."
-roleName="Contributor"
-if [ -n "${userObjectId}" ]
-then
-  az role assignment create \
-    --assignee-object-id "${userObjectId}" \
-    --assignee-principal-type User \
-    --role "${roleName}" \
-    --scope "${userScope}" \
-    --output none
+roles=("Contributor" "Role Based Access Control Administrator")
 
-  if [ ! $? -eq 0 ]
+for role in "${roles[@]}"
+do
+  if [ -n "${userObjectId}" ]
   then
-    echo "${newline}${errorStyle}ERROR adding role to User, exiting.${defaultTextStyle}${newline}"
-    # delete User
-    az ad user delete --id "${userObjectId}"
-    exit 1
+    az role assignment create \
+      --assignee-object-id "${userObjectId}" \
+      --assignee-principal-type User \
+      --role "${role}" \
+      --scope "${userScope}" \
+      --output none
+
+    if [ ! $? -eq 0 ]
+    then
+      echo "${newline}${errorStyle}ERROR adding role to User, exiting.${defaultTextStyle}${newline}"
+      # delete User
+      az ad user delete --id "${userObjectId}"
+      exit 1
+    fi
+
+    echo "${newline}Role '${role}' added successfully.${newline}"
+  
   fi
-
-  echo "${newline}Role '$roleName' added successfully.${newline}"
- 
-fi
-
-# Add role to new user
-echo "${newline}Adding new role assignment..."
-roleName="Role Based Access Control Administrator"
-if [ -n "${userObjectId}" ]
-then
-  az role assignment create \
-    --assignee-object-id "${userObjectId}" \
-    --assignee-principal-type User \
-    --role "${roleName}" \
-    --scope "${userScope}" \
-    --output none
-
-  if [ ! $? -eq 0 ]
-  then
-    echo "${newline}${errorStyle}ERROR adding role to User, exiting.${defaultTextStyle}${newline}"
-    # delete User
-    az ad user delete --id "${userObjectId}"
-    exit 1
-  fi
-
-  echo "${newline}Role '$roleName' added successfully.${newline}"
- 
-fi
+done
 
 # list roles
 echo "${newline}User role assignments:-"
 az role assignment list --assignee "${userObjectId}" --query "[].roleDefinitionName" --output tsv
 echo "${newline}"
 
-echo "User login: $userPrincipalName"
-echo "Password: $initialPasswd${newline}"
+echo "Object Id: ${userObjectId}"
+echo "User login: ${userPrincipalName}"
+echo "Password: ${initialPasswd}${newline}"
