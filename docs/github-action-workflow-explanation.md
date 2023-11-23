@@ -1,5 +1,7 @@
 ## GitHub Action workflow file explanation
 
+Before the workflow file will function successfully you must first add secrets to the GitHub repository. See instructions detailed in document [Adding secrets to the GitHub repository](adding-secrets-to-repository.md).
+
 By using this workflow to deploy a static site to an Azure storage account. I will be able to automatically deploy the site to Azure from GitHub when changes are pushed to the repositories main branch.
 
 The [workflow](../.github/workflows/upload.yml) will:
@@ -10,7 +12,6 @@ The [workflow](../.github/workflows/upload.yml) will:
 ### Review GitHub Action workflow file
 
 The first line defines the name of the Actions workflow.
-
 
 ```yml
 name: Blob storage website CI

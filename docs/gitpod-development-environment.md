@@ -42,6 +42,23 @@ gp sync-await gh-cli
 When you restart a workspace, Gitpod already executed the init task either as part of a Prebuild or when you started the workspace for the first time. The init task will not be
 run when the workspace is restarted. Gitpod executes the before and command tasks on restarts. **It is recommended to use the before task not the init task.**
 
+
+The first time you login to Gitpod with GitHub, you will be prompted to “Authorize Gitpod” to access your GitHub account. This creates a connection between Gitpod and your GitHub account, and installs an OAuth App in your GitHub settings.
+
+Gitpod uses the name and email from your GitHub account ID to create a new Gitpod user account. This is sufficient to start a Gitpod workspace on a public repository.
+
+### Granting additional GitHub OAuth permissions
+GitHub requires repo scope permissions to open a workspace on a private repository, or to push code changes from a workspace back to your repository.
+
+You can grant these additional permissions for GitHub at https://gitpod.io/integrations using the context menu on the right and selecting Edit permissions.
+
+Select the following
+
+- [x] user:email
+- [x] public_repo
+- [x] repo
+- [x] workflow
+
 ### Gitpod environmental variables
 
 Gitpod supports encrypted, user-specific environment variables[<sup>[1]</sup>](#external-references). They are stored as part of your user settings and can be used to set access tokens, or pass any other kind of user-specific information to your workspaces.

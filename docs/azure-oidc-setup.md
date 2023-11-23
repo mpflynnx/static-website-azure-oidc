@@ -31,6 +31,8 @@ I have created a bash script [azure-oidc-setup.sh](../bin/azure-oidc-setup.sh) t
 
 To run this script successfully, it is recommended to sign in to Azure Cli with a user login. The user must have been assigned two roles, 'Contributor' and 'Role Based Access Control Administrator' as a minimum. I have created a bash script [new-azure-user.sh](../bin/new-azure-user.sh) to aid in the creation of a new user in Azure with the roles needed. Refer to document: [new azure user script explanation](new-azure-user-script-explanation.md) for a more detailed explanation.
 
+You must first configure your developer environment and GitHub to use GitHub CLI. See instructions detailed in document [GitHub CLI Setup](github-cli-setup.md).
+
 ### Review of the azure-oidc-setup.sh bash script
 
 The first lines of the script are for formatting the error messages.
