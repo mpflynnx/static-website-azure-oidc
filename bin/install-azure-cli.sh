@@ -2,7 +2,7 @@
 
 # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt#option-2-step-by-step-installation-instructions
 
-cd /workspace || exit
+pushd /workspace || exit
 
 # Get packages needed for the installation process:
 sudo apt-get update
@@ -24,6 +24,6 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microso
 sudo apt-get update
 sudo apt-get install azure-cli
 
-cd "$PROJECT_ROOT" || exit
+popd || exit
 
 az login --use-device-code

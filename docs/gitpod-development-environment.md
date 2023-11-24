@@ -68,7 +68,7 @@ Setting user-specific environment variables
 Using the command: gp env
 
 ```bash
-gp env PROJECT_ROOT='/workspace/static-website-azure-oidc'
+gp env GITHUB_TOKEN="ghp_EXAMPLEcT84BctglVjwRvzN4Qc2PkEXAMPLE"
 ```
 
 Beware that this does not modify your current terminal session, but rather persists this variable for the next workspace on this repository. gp can only interact with the persistent environment variables for this repository, not the environment variables of your terminal. If you want to set that environment variable in your terminal, you can do so using -e:
