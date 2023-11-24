@@ -101,6 +101,13 @@ Refer to document: [Adding secrets to repository](/docs/adding-secrets-to-reposi
 
 Source files for the static website are stored in the [public](./public/) folder of the repository.
 
+```bash
+public/
+.
+├── assets
+├── index.html
+├── error.html
+```
 
 ## Recommended GitHub flow
 
