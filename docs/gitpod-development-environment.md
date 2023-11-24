@@ -1,4 +1,4 @@
-## Gitpod development platform
+## Gitpod development environment
 
 This project can utilise the [Gitpod](https://www.gitpod.io/) development platform.
 

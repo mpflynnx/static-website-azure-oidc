@@ -1,6 +1,8 @@
 # static-website-azure-oidc
 
-This is my template project for automating the upload of static website source files to Azure Storage. Azure provides a low cost way to host a static website.
+This is my template project for automating the upload of static website source files to Azure Storage. 
+
+Azure provides a low cost way to host a static website.
 
 ## Azure "12 Months Free"
 
@@ -38,11 +40,11 @@ Special Thanks for the above information from [Mark Tinderholt](https://github.c
 
 - An Azure account with an active subscription. [Create an account for free](https://azure.microsoft.com/free/?WT.mc_id=A261C142F).
 - An Azure restricted user account for development (optional, but recommended).
-- A provisioned static website hosted in Azure Storage and Azure Front Door CDN. See my [Terraform deploy repo]()
+- A provisioned static website hosted in Azure Storage with Azure Front Door CDN. See my [Terraform Azure static site]() repository.
 - A GitHub account. If you do not have a GitHub account, [sign up for free](https://github.com/join).
-- [GitHub CLI](https://cli.github.com/) installed and [authenticated](./docs/github-cli-setup.md) to a GitHub account.
+- [GitHub CLI](https://cli.github.com/) installed and [authenticated](./docs/github-cli-setup.md)[<sup>[4]</sup>](#references) to a GitHub account.
 - [Azure CLI](https://learn.microsoft.com/en-gb/cli/azure/what-is-azure-cli) installed and [authorised](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code) with your Azure user login.
-- Gitpod account (optional). For cloud based development environment. [Try for free](https://gitpod.io/login/)
+- Gitpod account (optional). For cloud based development environment[<sup>[5]</sup>](#references). [Try for free](https://gitpod.io/login/)
 
 
 ## Setting up a GitHub repository to use this template
@@ -58,16 +60,16 @@ Next, enter any suitable name for your static website as the Repository name.
 Finally, select Public and click Create repository from template.
 
 
-## GitHub Action
+## GitHub Actions
 
-Automation or continuos integration (CI) is achieved by using a GitHub Action workflow file stored in the '.github/workflows' folder. A pull request pushed to the public folder of the main branch will start the workflow. 
+Automation or continuos integration (CI) is achieved by using a GitHub Action [workflow](.github/workflows/upload.yml) file stored in the '.github/workflows' folder. A push to the [public](./public/) folder of the main branch will start the workflow. 
 
 The workflow will:
 
 - Upload the content of the public folder to the Azure storage.
 - Purge the Front Door CDN, so that the old content is removed from the edge locations.
 
-Refer to document: [Github Actions Workflow](/docs/github-action-workflow-explanation.md) for a more detailed explanation.
+Refer to document: [Github Actions Workflow](/docs/github-action-workflow-explanation.md)[<sup>[1]</sup>](#references) for a more detailed explanation.
 
 ## Generate deployment credentials for workflow
 
@@ -77,21 +79,19 @@ OpenID Connect (OIDC) configures the GitHub Action workflow to request a short-l
 
 To ease setup, I have created a bash script [azure-oidc-setup.sh](./bin/azure-oidc-setup.sh) which will automate the process of setting up Azure OIDC with this repository and the GitHub Action workflow.
 
-Refer to document: [Azure OIDC setup](/docs/azure-oidc-setup.md) for a more detailed explanation of the script.
+Refer to document: [Azure OIDC setup](/docs/azure-oidc-setup.md)[<sup>[2]</sup>](#references) for a more detailed explanation of the script.
 
 ## Configuring GitHub repository secrets
 
 The workflow file needs to retrieve variables to successfully complete. It is advisable to never hard code variables as this can lead to security vulnerabilities and reduces the reusability of the workflow file.
 
-I store these variables as secrets in the GitHub repository. I obtain most of the variable values dynamically from an Azure resource group and the GitHub repository.
+I store these variables as secrets in the GitHub repository. I obtain most of the variable values from an Azure resource group and the GitHub repository. To ease setup of the GitHub repository secrets, I have created a bash script [add-workflow-secrets.sh](./bin/add-workflow-secrets.sh)
 
-To ease setup of the GitHub repository secrets, I have created a bash script [add-workflow-secrets.sh](./bin/add-workflow-secrets.sh)
-
-Refer to document: [Adding secrets to repository](/docs/adding-secrets-to-repository.md) for a more detailed explanation of the script.
+Refer to document: [Adding secrets to repository](/docs/adding-secrets-to-repository.md)[<sup>[3]</sup>](#references) for a more detailed explanation of the script.
 
 ## Static website source files
 
-Source files for the static website are to be stored in the public folder of the repository.
+Source files for the static website are stored in the [public](./public/) folder of the repository.
 
 
 ## Recommended GitHub flow
@@ -100,5 +100,14 @@ Source files for the static website are to be stored in the public folder of the
 - Create a new feature branch to work on the issue.
 when ready, commit your updates to the feature branch.
 - Create a pull request to merge the feature branch into the main branch.
-- The GitHub Action workflow will begin automatically and your source file will be uploaded and the CDN purged.
-- Updated static website should be available across the globe.
+- The GitHub Action workflow will begin automatically and your static site updates will be uploaded and the CDN purged.
+- The updated static website should be available across the globe.
+
+## References
+
+- [GitHub Action workflow file explanation](./docs/github-action-workflow-explanation.md) <sup>[1]</sup>
+- [Azure OIDC setup](./docs/azure-oidc-setup.md) <sup>[2]</sup>
+- [Adding secrets to the GitHub repository](./docs/adding-secrets-to-repository.md) <sup>[3]</sup>
+- [Setting up GitHub Cli authentication](./docs/github-cli-setup.md) <sup>[4]</sup>
+- [Gitpod development environment](./docs/gitpod-development-environment.md) <sup>[5]</sup>
+- [Azure new user creation](./docs/new-azure-user-script-explanation.md) <sup>[6]</sup>
